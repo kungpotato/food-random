@@ -25,15 +25,14 @@ class _ManageState extends State<Manage> {
             ),
             child: const TabBar(
               tabs: [
-                Tab(text: 'Tab 1'),
-                Tab(text: 'Tab 2'),
+                Tab(text: 'กลุ่ม'),
+                Tab(text: 'อาหาร'),
               ],
             ),
           ),
           Expanded(
             child: TabBarView(
               children: [
-                // Tab 1 Content
                 Padding(
                   padding: const EdgeInsets.all(10),
                   child: ListView.builder(
@@ -45,9 +44,16 @@ class _ManageState extends State<Manage> {
                     },
                   ),
                 ),
-                // Tab 2 Content
-                const Center(
-                  child: Text('Content for Tab 2'),
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: ListView.builder(
+                    itemCount: _listViewData.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return ListTile(
+                        title: Text(_listViewData[index]),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),

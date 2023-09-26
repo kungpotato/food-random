@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:foodrandom/manage.dart';
 import 'package:foodrandom/random.dart';
+import 'package:foodrandom/utils/calculate.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +42,13 @@ class MyHomePageState extends State<MyHomePage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final menuSelector = MenuSelector();
+    menuSelector.generateWeeklyMenu();
   }
 
   @override
