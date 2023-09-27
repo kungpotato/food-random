@@ -9,69 +9,61 @@ class MenuPlanner {
 
   final Random _random = Random();
 
-  List<String> pickUniqueRandomItems(List<String> group, int count) {
+  final Set<String> _pickedLunches = {};
+
+  List<String> pickUniqueRandom(
+      List<String> group, int count, Set<String> exclude) {
+    final available = List<String>.from(group)
+      ..removeWhere((item) => exclude.contains(item));
+    if (available.length < count) {
+      throw ArgumentError('Not enough unique items available.');
+    }
+
     final picked = <String>[];
-    final available = List<String>.from(group);
     while (picked.length < count) {
       final index = _random.nextInt(available.length);
       picked.add(available.removeAt(index));
     }
+    _pickedLunches.addAll(picked);
     return picked;
   }
 
   void planMenus() {
-    final l1 = menus
-        .where((e) => e.timePerWeek == 3)
-        .map((e) => e.sub
-            .map((v) => pickUniqueRandomItems(v.dishes, v.pick))
-            .expand((i) => i))
-        .expand((i) => i)
-        .toList();
-    final l2 = menus
-        .where((e) => e.timePerWeek == 3)
-        .map((e) => e.sub
-            .map((v) => pickUniqueRandomItems(v.dishes, v.pick))
-            .expand((i) => i))
-        .expand((i) => i)
-        .toList();
-    final l3 = menus
-        .where((e) => e.timePerWeek == 3)
-        .map((e) => e.sub
-            .map((v) => pickUniqueRandomItems(v.dishes, v.pick))
-            .expand((i) => i))
-        .expand((i) => i)
-        .toList();
-    int count = 0;
-    final lunch = menus
+    List<String> lunch = menus
         .where((e) => e.type == 'lunch')
         .map((e) => e.sub.isEmpty
-            ? pickUniqueRandomItems(e.dishes, e.timePerWeek)
+            ? pickUniqueRandom(e.dishes, e.timePerWeek, _pickedLunches)
                 .map((v) => '${e.category}=>$v')
-            : pickUniqueRandomItems([
+            : pickUniqueRandom([
                 ...e.dishes.map((v) => '${e.category}=>$v'),
-                ...e.sub.map((v) {
-                  if (v.pick == 0) {
-                    return '${e.category}=>${v.category}';
+                ...e.sub.asMap().entries.map((v) {
+                  if (v.value.pick == 0) {
+                    return '${e.category}=>${v.value.category}';
                   } else {
-                    count++;
-                    return '${e.category}=>@$count';
+                    final ll = menus
+                        .where((n) => n.timePerWeek == 3)
+                        .map((j) => j.sub.map((p) {
+                              return pickUniqueRandom(
+                                  p.dishes, p.pick, _pickedLunches);
+                            }).expand((i) => i))
+                        .expand((i) => i)
+                        .toList();
+                    return '${e.category}=>${ll.join(',')}';
                   }
                 })
-              ], e.timePerWeek))
+              ], e.timePerWeek, _pickedLunches))
         .expand((i) => i)
-        .map((e) => e.contains('@1') ? e.replaceFirst('@1', l1.join(',')) : e)
-        .map((e) => e.contains('@2') ? e.replaceFirst('@2', l2.join(',')) : e)
-        .map((e) => e.contains('@3') ? e.replaceFirst('@3', l3.join(',')) : e)
         .toList()
       ..shuffle(_random);
+
     final dinner = menus
         .where((e) => e.type == 'dinner')
-        .map((e) => pickUniqueRandomItems([
+        .map((e) => pickUniqueRandom([
               ...e.dishes.map((v) => '${e.category}=>$v'),
               ...e.sub.map((v) => v.pick == 0
                   ? '${e.category}=>${v.category}'
-                  : '${e.category}=>${v.category}:${pickUniqueRandomItems(v.dishes, v.pick).join(',')}')
-            ], e.timePerWeek))
+                  : '${e.category}=>${v.category}:${pickUniqueRandom(v.dishes, v.pick, _pickedLunches).join(',')}')
+            ], e.timePerWeek, _pickedLunches))
         .expand((i) => i)
         .toList()
       ..shuffle(_random);
