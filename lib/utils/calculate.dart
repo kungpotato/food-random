@@ -1,72 +1,55 @@
 import 'dart:math';
 
-class MenuSelector {
-  final List<String> group1 = [
-    'Menu 1A',
-    'Menu 1B',
-    'Menu 1C',
-    'Menu 1D',
-    'Menu 1E',
-    'Menu 1F',
-    'Menu 1G',
-    'Menu 1H',
-    'Menu 1I',
-    'Menu 1J',
-  ];
+import 'package:foodrandom/models/menu_model.dart';
 
-  final List<String> group2 = [
-    'Menu 2A',
-    'Menu 2B',
-    'Menu 2C',
-    'Menu 2D',
-    'Menu 2E',
-    'Menu 2F',
-    'Menu 2G',
-    'Menu 2H',
-    'Menu 2I',
-    'Menu 2J',
-  ];
+class MenuPlanner {
+  MenuPlanner({required this.menus});
 
-  final List<String> group3 = [
-    'Menu 3A',
-    'Menu 3B',
-    'Menu 3C',
-    'Menu 3D',
-    'Menu 3E',
-    'Menu 3F',
-    'Menu 3G',
-    'Menu 3H',
-    'Menu 3I',
-    'Menu 3J',
-  ];
+  final List<Menu> menus;
 
-  final _random = Random();
+  final Random _random = Random();
 
-  String selectRandomItem(List<String> group) {
-    final index = _random.nextInt(group.length);
-    return group[index];
+  List<String> pickUniqueRandomItems(List<String> group, int count) {
+    final picked = <String>[];
+    final available = List<String>.from(group);
+    while (picked.length < count) {
+      final index = _random.nextInt(available.length);
+      picked.add(available.removeAt(index));
+    }
+    return picked;
   }
 
-  void generateWeeklyMenu() {
-    final selectedMenus = <String>[];
+  void planMenus() {
+    final lunch = menus
+        .where((e) => e.type == 'lunch')
+        .map((e) => e.sub.isEmpty
+            ? pickUniqueRandomItems(e.dishes, e.timePerWeek)
+                .map((v) => '${e.category}=>$v')
+            : pickUniqueRandomItems([
+                ...e.dishes.map((v) => '${e.category}=>$v'),
+                ...e.sub.map((v) => v.pick == 0
+                    ? '${e.category}=>${v.category}'
+                    : '${e.category}=>${v.category}:${pickUniqueRandomItems(v.dishes, v.pick).join(',')}')
+              ], e.timePerWeek))
+        .expand((i) => i)
+        .toList()
+      ..shuffle(_random);
+    final dinner = menus
+        .where((e) => e.type == 'dinner')
+        .map((e) => pickUniqueRandomItems([
+              ...e.dishes.map((v) => '${e.category}=>$v'),
+              ...e.sub.map((v) => v.pick == 0
+                  ? '${e.category}=>${v.category}'
+                  : '${e.category}=>${v.category}:${pickUniqueRandomItems(v.dishes, v.pick).join(',')}')
+            ], e.timePerWeek))
+        .expand((i) => i)
+        .toList()
+      ..shuffle(_random);
 
-    for (int i = 0; i < 5; i++) {
-      selectedMenus.add(selectRandomItem(group1));
-    }
-    for (int i = 0; i < 6; i++) {
-      selectedMenus.add(selectRandomItem(group2));
-    }
-    for (int i = 0; i < 3; i++) {
-      selectedMenus.add(selectRandomItem(group3));
-    }
+    print('Lunch menus for the week:');
+    lunch.forEach(print);
 
-    selectedMenus.shuffle();
-
-    print('Weekly Menu for Lunch and Dinner:');
-    for (int i = 0; i < 7; i++) {
-      final lunch = selectedMenus.removeLast();
-      final dinner = selectedMenus.removeLast();
-      print('Day ${i + 1}: Lunch - $lunch, Dinner - $dinner');
-    }
+    print('\nDinner menus for the week:');
+    dinner.forEach(print);
   }
 }

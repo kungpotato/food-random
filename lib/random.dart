@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:foodrandom/models/menu_model.dart';
+import 'package:foodrandom/utils/calculate.dart';
 
 class RandomFood extends StatefulWidget {
   const RandomFood({super.key});
@@ -10,6 +15,22 @@ class RandomFood extends StatefulWidget {
 class _RandomFoodState extends State<RandomFood> {
   static const int _rowCount = 8;
   static const int _columnCount = 3;
+
+  Future<List<Menu>> loadMenu() async {
+    String jsonString = await rootBundle.loadString('assets/mocks/menu.json');
+    final list = jsonDecode(jsonString) as List;
+    return list.map((e) => Menu.fromJson(e)).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final data = await loadMenu();
+      final plan = MenuPlanner(menus: data);
+      plan.planMenus();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
