@@ -41,6 +41,7 @@ class MenuPlanner {
             .expand((i) => i))
         .expand((i) => i)
         .toList();
+    int count = 0;
     final lunch = menus
         .where((e) => e.type == 'lunch')
         .map((e) => e.sub.isEmpty
@@ -48,14 +49,19 @@ class MenuPlanner {
                 .map((v) => '${e.category}=>$v')
             : pickUniqueRandomItems([
                 ...e.dishes.map((v) => '${e.category}=>$v'),
-                ...e.sub.asMap().entries.map((v) => v.value.pick == 0
-                    ? '${e.category}=>${v.value.category}'
-                    : '${e.category}=>@${v.key}')
+                ...e.sub.map((v) {
+                  if (v.pick == 0) {
+                    return '${e.category}=>${v.category}';
+                  } else {
+                    count++;
+                    return '${e.category}=>@$count';
+                  }
+                })
               ], e.timePerWeek))
         .expand((i) => i)
-        .map((e) => e.contains('@0') ? e.replaceAll('@0', l1.join(',')) : e)
-        .map((e) => e.contains('@1') ? e.replaceAll('@1', l2.join(',')) : e)
-        .map((e) => e.contains('@2') ? e.replaceAll('@2', l3.join(',')) : e)
+        .map((e) => e.contains('@1') ? e.replaceFirst('@1', l1.join(',')) : e)
+        .map((e) => e.contains('@2') ? e.replaceFirst('@2', l2.join(',')) : e)
+        .map((e) => e.contains('@3') ? e.replaceFirst('@3', l3.join(',')) : e)
         .toList()
       ..shuffle(_random);
     final dinner = menus
