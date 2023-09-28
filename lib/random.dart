@@ -68,8 +68,9 @@ class _RandomFoodState extends State<RandomFood> {
         }
       },
       child: Card(
-          child:
-              Padding(padding: const EdgeInsets.all(4), child: Text(item[1]))),
+          child: Center(
+              child: Padding(
+                  padding: const EdgeInsets.all(4), child: Text(item[1])))),
     );
   }
 
@@ -174,9 +175,13 @@ class _RandomFoodState extends State<RandomFood> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: list
+                .asMap()
+                .entries
                 .map((e) => ListTile(
+                      leading:
+                          list.length > 1 ? Text((e.key + 1).toString()) : null,
                       title: Text(
-                        e,
+                        e.value,
                         style: const TextStyle(fontSize: 18),
                       ),
                     ))
