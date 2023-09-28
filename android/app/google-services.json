@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "648211858999",
+    "project_id": "random-food-82642",
+    "storage_bucket": "random-food-82642.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:648211858999:android:fa3491f533514e2145e1b2",
+        "android_client_info": {
+          "package_name": "com.example.foodrandom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCa3lnR1Dp5RZbawsoRBeOSo5a9jOj4j90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
