@@ -15,6 +15,25 @@ class RandomFood extends StatefulWidget {
 class _RandomFoodState extends State<RandomFood> {
   static const int _rowCount = 8;
   static const int _columnCount = 3;
+  static const Map<int, String> _dayNames = {
+    3: 'จันทร์',
+    6: 'อังคาร',
+    9: 'พุธ',
+    12: 'พฤหัสบดี',
+    15: 'ศุกร์',
+    18: 'เสาร์',
+    21: 'อาทิตย์',
+  };
+  static const Map<int, Color> _dayColors = {
+    3: Colors.yellow,
+    6: Colors.pink,
+    9: Colors.green,
+    12: Colors.orange,
+    15: Colors.blue,
+    18: Colors.purple,
+    21: Colors.red,
+  };
+
   List<String> lunch = [];
   List<String> dinner = [];
 
@@ -37,156 +56,24 @@ class _RandomFoodState extends State<RandomFood> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _columnCount,
-          childAspectRatio: (1 / .5),
-        ),
-        itemCount: _rowCount * _columnCount,
-        itemBuilder: (BuildContext context, int index) {
-          if (index == 0) {
-            return const SizedBox();
-          }
-          if (index == 1) {
-            return _meal('อาหารกลางวัน', Colors.red);
-          }
-          if (index == 2) {
-            return _meal('อาหารเย็น', Colors.black);
-          }
-          if (index == 3) {
-            return _datItem('จันทร์', Colors.yellow);
-          }
-          if (index == 6) {
-            return _datItem('อังคาร', Colors.pink);
-          }
-          if (index == 9) {
-            return _datItem('พุธ', Colors.green);
-          }
-          if (index == 12) {
-            return _datItem('พฤหัสบดี', Colors.orange);
-          }
-          if (index == 15) {
-            return _datItem('ศุกร์', Colors.blue);
-          }
-          if (index == 18) {
-            return _datItem('เสาร์', Colors.purple);
-          }
-          if (index == 21) {
-            return _datItem('อาทิตย์', Colors.red);
-          }
-          if (index == 4 && lunch.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(lunch[0]),
-              ),
-            );
-          }
-          if (index == 7 && lunch.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(lunch[1]),
-              ),
-            );
-          }
-          if (index == 10 && lunch.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(lunch[2]),
-              ),
-            );
-          }
-          if (index == 13 && lunch.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(lunch[3]),
-              ),
-            );
-          }
-          if (index == 16 && lunch.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(lunch[4]),
-              ),
-            );
-          }
-          if (index == 19 && lunch.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(lunch[5]),
-              ),
-            );
-          }
-          if (index == 22 && lunch.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(lunch[6]),
-              ),
-            );
-          }
-          if (index == 5 && dinner.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(dinner[0]),
-              ),
-            );
-          }
-          if (index == 8 && dinner.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(dinner[1]),
-              ),
-            );
-          }
-          if (index == 11 && dinner.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(dinner[2]),
-              ),
-            );
-          }
-          if (index == 14 && dinner.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(dinner[3]),
-              ),
-            );
-          }
-          if (index == 17 && dinner.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(dinner[4]),
-              ),
-            );
-          }
-          if (index == 20 && dinner.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(dinner[5]),
-              ),
-            );
-          }
-          if (index == 23 && dinner.isNotEmpty) {
-            return Card(
-              child: Center(
-                child: Text(dinner[6]),
-              ),
-            );
-          }
-          return Card(
-            child: Center(
-              child: Text('Item $index'),
-            ),
-          );
-        },
-      ),
+  Widget _buildMealCard(String meal) {
+    final item = meal.split('=>');
+    final data = item[1].split(',');
+    return InkWell(
+      onTap: () {
+        if (data.length > 1) {
+          _showTextDialog(data, item[0]);
+        } else {
+          _showTextDialog([item[1]], item[0]);
+        }
+      },
+      child: Card(
+          child:
+              Padding(padding: const EdgeInsets.all(4), child: Text(item[1]))),
     );
   }
 
-  Widget _meal(String text, Color color) {
+  Widget _buildLabel(String text, Color color) {
     return Padding(
       padding: const EdgeInsets.all(4),
       child: Container(
@@ -198,38 +85,113 @@ class _RandomFoodState extends State<RandomFood> {
           child: Text(
             text,
             style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.white),
+                fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
           ),
         ),
       ),
     );
   }
 
-  Widget _datItem(String text, Color color) {
+  Widget _buildDayItem(String text, Color color) {
     return Padding(
       padding: const EdgeInsets.all(4),
       child: Container(
         decoration: BoxDecoration(
           border: Border(
-              left: BorderSide(
-                color: color,
-                width: 10.0,
-              ),
-              bottom: const BorderSide(
-                color: Colors.grey,
-              )),
-          // borderRadius: BorderRadius.circular(10.0),
+            left: BorderSide(
+              color: color,
+              width: 10.0,
+            ),
+            bottom: const BorderSide(
+              color: Colors.grey,
+            ),
+          ),
         ),
         child: Center(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
           ),
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: _columnCount,
+          childAspectRatio: (1 / .6),
+        ),
+        itemCount: _rowCount * _columnCount,
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0) {
+            return const SizedBox(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '25-1',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'ตุลาคม 2523',
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
+            );
+          }
+          if (index == 1) return _buildLabel('อาหารกลางวัน', Colors.orange);
+          if (index == 2) return _buildLabel('อาหารเย็น', Colors.black);
+          if (_dayNames.containsKey(index)) {
+            return _buildDayItem(_dayNames[index]!, _dayColors[index]!);
+          }
+          if (index >= 4 && index <= 22 && index % 3 == 1 && lunch.isNotEmpty) {
+            return _buildMealCard(lunch[(index - 4) ~/ 3]);
+          }
+          if (index >= 5 &&
+              index <= 23 &&
+              index % 3 == 2 &&
+              dinner.isNotEmpty) {
+            return _buildMealCard(dinner[(index - 5) ~/ 3]);
+          }
+          return Card(child: Center(child: Text('Item $index')));
+        },
+      ),
+    );
+  }
+
+  void _showTextDialog(List<String> list, String title) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: list
+                .map((e) => ListTile(
+                      title: Text(
+                        e,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ))
+                .toList(),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

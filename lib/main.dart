@@ -47,8 +47,8 @@ class MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(_selectedIndex == 0 ? 'รายการอาหารสุ่ม' : 'จัดการรายการอาหาร'),
+        title: Text(
+            _selectedIndex == 0 ? 'เมนูประจำอาทิตย์' : 'จัดการรายการอาหาร'),
         elevation: 0,
       ),
       body: _pages().elementAt(_selectedIndex),
