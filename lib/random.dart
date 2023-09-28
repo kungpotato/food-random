@@ -15,6 +15,8 @@ class RandomFood extends StatefulWidget {
 class _RandomFoodState extends State<RandomFood> {
   static const int _rowCount = 8;
   static const int _columnCount = 3;
+  List<String> lunch = [];
+  List<String> dinner = [];
 
   Future<List<Menu>> loadMenu() async {
     String jsonString = await rootBundle.loadString('assets/mocks/menu.json');
@@ -28,7 +30,10 @@ class _RandomFoodState extends State<RandomFood> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final data = await loadMenu();
       final plan = MenuPlanner(menus: data);
-      plan.planMenus();
+      setState(() {
+        lunch = plan.planLunchMenus();
+        dinner = plan.planDinnerMenus();
+      });
     });
   }
 
@@ -47,10 +52,10 @@ class _RandomFoodState extends State<RandomFood> {
             return const SizedBox();
           }
           if (index == 1) {
-            return _meal('อาหารกลางวัน', Colors.greenAccent);
+            return _meal('อาหารกลางวัน', Colors.red);
           }
           if (index == 2) {
-            return _meal('อาหารเย็น', Colors.blueAccent);
+            return _meal('อาหารเย็น', Colors.black);
           }
           if (index == 3) {
             return _datItem('จันทร์', Colors.yellow);
@@ -73,7 +78,104 @@ class _RandomFoodState extends State<RandomFood> {
           if (index == 21) {
             return _datItem('อาทิตย์', Colors.red);
           }
-
+          if (index == 4 && lunch.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(lunch[0]),
+              ),
+            );
+          }
+          if (index == 7 && lunch.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(lunch[1]),
+              ),
+            );
+          }
+          if (index == 10 && lunch.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(lunch[2]),
+              ),
+            );
+          }
+          if (index == 13 && lunch.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(lunch[3]),
+              ),
+            );
+          }
+          if (index == 16 && lunch.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(lunch[4]),
+              ),
+            );
+          }
+          if (index == 19 && lunch.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(lunch[5]),
+              ),
+            );
+          }
+          if (index == 22 && lunch.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(lunch[6]),
+              ),
+            );
+          }
+          if (index == 5 && dinner.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(dinner[0]),
+              ),
+            );
+          }
+          if (index == 8 && dinner.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(dinner[1]),
+              ),
+            );
+          }
+          if (index == 11 && dinner.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(dinner[2]),
+              ),
+            );
+          }
+          if (index == 14 && dinner.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(dinner[3]),
+              ),
+            );
+          }
+          if (index == 17 && dinner.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(dinner[4]),
+              ),
+            );
+          }
+          if (index == 20 && dinner.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(dinner[5]),
+              ),
+            );
+          }
+          if (index == 23 && dinner.isNotEmpty) {
+            return Card(
+              child: Center(
+                child: Text(dinner[6]),
+              ),
+            );
+          }
           return Card(
             child: Center(
               child: Text('Item $index'),
@@ -95,7 +197,8 @@ class _RandomFoodState extends State<RandomFood> {
         child: Center(
           child: Text(
             text,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
       ),
