@@ -71,4 +71,15 @@ class MenuPlanner {
       ..shuffle(_random);
     return dinner;
   }
+
+  Map<String, List<String>> get allMenu {
+    Map<String, List<String>> map = {};
+    for (var e in menus) {
+      map[e.category] = e.dishes;
+      for (var v in e.sub) {
+        map[e.category]!.addAll(v.dishes.map((k) => '${v.category}:$k'));
+      }
+    }
+    return map;
+  }
 }

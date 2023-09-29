@@ -147,7 +147,7 @@ class _RandomFoodState extends State<RandomFood> {
             );
           }
           if (index == 1) return _buildLabel('อาหารกลางวัน', Colors.orange);
-          if (index == 2) return _buildLabel('อาหารเย็น', Colors.black);
+          if (index == 2) return _buildLabel('อาหารเย็น', Colors.black87);
           if (_dayNames.containsKey(index)) {
             return _buildDayItem(_dayNames[index]!, _dayColors[index]!);
           }
