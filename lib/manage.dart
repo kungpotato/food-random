@@ -14,12 +14,16 @@ class Manage extends StatefulWidget {
 class _ManageState extends State<Manage> {
   Map<String, List<String>> menus = {};
   String groupName = '';
+  List<Menu> allMenu = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       getMenusFromDb().listen((data) {
+        setState(() {
+          allMenu = data;
+        });
         final plan = MenuPlanner(menus: data);
         setState(() {
           menus = plan.allMenu;
@@ -65,6 +69,7 @@ class _ManageState extends State<Manage> {
                     context: context,
                     builder: (BuildContext context) {
                       return MenuDialog(
+                          allMenu: allMenu,
                           category: groupName,
                           type:
                               groupName.contains('เย็น') ? 'dinner' : 'lunch');
