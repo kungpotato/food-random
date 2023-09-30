@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:foodrandom/manage.dart';
 import 'package:foodrandom/random.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'firebase_options.dart';
 
@@ -11,7 +13,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  initializeDateFormatting('th', null).then((_) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -25,6 +27,15 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blueGrey,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      locale: const Locale('th'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('th', 'TH'),
+      ],
       home: const MyHomePage(),
     );
   }
@@ -88,14 +99,6 @@ class MyHomePageState extends State<MyHomePage> {
         title: Text(
             _selectedIndex == 0 ? 'เมนูประจำอาทิตย์' : 'จัดการรายการอาหาร'),
         elevation: 0,
-        actions: [
-          if (_selectedIndex == 1)
-            IconButton(
-                onPressed: () {
-                  //
-                },
-                icon: const Icon(Icons.add_circle))
-        ],
       ),
       body: _pages().elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(

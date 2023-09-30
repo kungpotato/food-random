@@ -1,7 +1,6 @@
-import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:foodrandom/menu_dialog.dart';
 import 'package:foodrandom/models/menu_model.dart';
 import 'package:foodrandom/utils/calculate.dart';
 
@@ -16,23 +15,41 @@ class _ManageState extends State<Manage> {
   Map<String, List<String>> menus = {};
   String groupName = '';
 
-  Future<List<Menu>> loadMenu() async {
-    String jsonString = await rootBundle.loadString('assets/mocks/menu.json');
-    final list = jsonDecode(jsonString) as List;
-    return list.map((e) => Menu.fromJson(e)).toList();
-  }
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final data = await loadMenu();
-      final plan = MenuPlanner(menus: data);
-      setState(() {
-        menus = plan.allMenu;
-        groupName = menus.entries.first.key;
+      getMenusFromDb().listen((data) {
+        final plan = MenuPlanner(menus: data);
+        setState(() {
+          menus = plan.allMenu;
+          groupName = menus.entries.first.key;
+        });
+      }, onError: (err, st) {
+        print(err);
+        print(st);
       });
     });
+  }
+
+  Stream<List<Menu>> getMenusFromDb([bool isSnap = true]) {
+    final CollectionReference menusCollection =
+        FirebaseFirestore.instance.collection('menus');
+    if (isSnap) {
+      return menusCollection.snapshots().map((snapshot) {
+        return snapshot.docs.map((doc) {
+          return Menu.fromJson(
+              {'id': doc.id, ...doc.data() as Map<String, dynamic>});
+        }).toList();
+      });
+    } else {
+      return menusCollection.get().asStream().map((snapshot) {
+        return snapshot.docs.map((doc) {
+          return Menu.fromJson(
+              {'id': doc.id, ...doc.data() as Map<String, dynamic>});
+        }).toList();
+      });
+    }
   }
 
   @override
@@ -42,6 +59,20 @@ class _ManageState extends State<Manage> {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
+            ElevatedButton.icon(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return MenuDialog(
+                          category: groupName,
+                          type:
+                              groupName.contains('เย็น') ? 'dinner' : 'lunch');
+                    },
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('เพิ่มอาหาร')),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: DropdownButton<String>(
