@@ -19,17 +19,39 @@ class MenuDialog extends StatefulWidget {
 
 class MenuDialogState extends State<MenuDialog> {
   final _formKey = GlobalKey<FormState>();
-
+  String supCategory = '';
+  List<String> options = [];
   List<SubMenu> sub = [];
   List<String> dishes = [];
+  bool noGroup = false;
+  final controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      options = widget.allMenu
+          .where((e) => e.category == widget.category)
+          .map((e) => e.sub)
+          .expand((i) => i)
+          .map((e) => e.category)
+          .toList();
+      if (options.isNotEmpty) {
+        supCategory = options.first;
+      } else {
+        noGroup = true;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controller.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final options = widget.allMenu
-        .where((e) => e.category == widget.category)
-        .map((e) => e.sub)
-        .expand((i) => i)
-        .map((e) => e.category);
     return AlertDialog(
       title: Text(widget.category),
       content: SingleChildScrollView(
@@ -37,13 +59,19 @@ class MenuDialogState extends State<MenuDialog> {
           key: _formKey,
           child: Column(
             children: [
-              if (options.isNotEmpty)
+              if (options.isNotEmpty && !noGroup)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: DropdownButton<String>(
-                    value: options.first,
+                    value: supCategory,
                     isExpanded: true,
-                    onChanged: (String? newValue) {},
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() {
+                          supCategory = v;
+                        });
+                      }
+                    },
                     items: options.map<DropdownMenuItem<String>>((value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -55,11 +83,25 @@ class MenuDialogState extends State<MenuDialog> {
                     }).toList(),
                   ),
                 ),
+              if (options.isNotEmpty)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Text('ไม่มีกลุ่ม'),
+                    Checkbox(
+                        value: noGroup,
+                        onChanged: (v) {
+                          if (v != null) {
+                            setState(() {
+                              noGroup = v;
+                            });
+                          }
+                        }),
+                  ],
+                ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'อาหาร'),
-                onChanged: (value) {
-                  //
-                },
+                controller: controller,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'ใส่ชื่ออาหาร';
@@ -73,23 +115,38 @@ class MenuDialogState extends State<MenuDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              CollectionReference menus =
-                  FirebaseFirestore.instance.collection('menus');
-              menus
-                  .add(Menu(
-                category: '',
-                timePerWeek: 0,
-                type: '',
-                sub: sub,
-                dishes: dishes,
-              ).toMap())
-                  .then((value) {
-                print("Menu Added");
-              }).catchError((error) {
-                print("Failed to add menu: $error");
-              });
+              Menu item = widget.allMenu
+                  .firstWhere((e) => e.category == widget.category);
+              final ref =
+                  FirebaseFirestore.instance.collection('menus').doc(item.id);
+              if (supCategory.isNotEmpty && !noGroup) {
+                SubMenu sup =
+                    item.sub.firstWhere((e) => e.category == supCategory);
+                sup.dishes.add(controller.value.text);
+                final index =
+                    item.sub.indexWhere((e) => e.category == sup.category);
+                item.sub[index] = sup;
+                final map = {
+                  'sub': item.sub.map((e) => e.toMap()),
+                  ...item.toMap()
+                };
+                await ref.update(map);
+              } else {
+                item.dishes.add(controller.value.text);
+                final map = {'dishes': item.dishes, ...item.toMap()};
+                await ref.update(map);
+              }
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('สำเร็จ'),
+                  backgroundColor: Colors.green,
+                  // Use green color to indicate success
+                  duration: Duration(seconds: 3),
+                ));
+              }
             }
           },
           child: const Text('บันทึก'),

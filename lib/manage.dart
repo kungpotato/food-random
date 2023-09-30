@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:foodrandom/menu_dialog.dart';
@@ -12,6 +14,7 @@ class Manage extends StatefulWidget {
 }
 
 class _ManageState extends State<Manage> {
+  StreamSubscription? disposeMenu;
   Map<String, List<String>> menus = {};
   String groupName = '';
   List<Menu> allMenu = [];
@@ -20,14 +23,16 @@ class _ManageState extends State<Manage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      getMenusFromDb().listen((data) {
+      disposeMenu = getMenusFromDb().listen((data) {
         setState(() {
           allMenu = data;
         });
         final plan = MenuPlanner(menus: data);
         setState(() {
           menus = plan.allMenu;
-          groupName = menus.entries.first.key;
+          if (groupName.isEmpty) {
+            groupName = menus.entries.first.key;
+          }
         });
       }, onError: (err, st) {
         print(err);
@@ -36,9 +41,15 @@ class _ManageState extends State<Manage> {
     });
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    disposeMenu?.cancel();
+  }
+
   Stream<List<Menu>> getMenusFromDb([bool isSnap = true]) {
     final CollectionReference menusCollection =
-        FirebaseFirestore.instance.collection('menus');
+    FirebaseFirestore.instance.collection('menus');
     if (isSnap) {
       return menusCollection.snapshots().map((snapshot) {
         return snapshot.docs.map((doc) {
@@ -72,7 +83,7 @@ class _ManageState extends State<Manage> {
                           allMenu: allMenu,
                           category: groupName,
                           type:
-                              groupName.contains('เย็น') ? 'dinner' : 'lunch');
+                          groupName.contains('เย็น') ? 'dinner' : 'lunch');
                     },
                   );
                 },
@@ -102,18 +113,23 @@ class _ManageState extends State<Manage> {
               ),
             ),
             ...menus[groupName]
-                    ?.map((e) => ListTile(
-                          title: Text(
-                              e.split(':').length > 1 ? e.split(':')[1] : e),
-                          subtitle: Text(
-                              e.split(':').length > 1 ? e.split(':')[0] : ''),
-                          trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                //
-                              }),
-                        ))
-                    .toList() ??
+                ?.map((e) =>
+                ListTile(
+                  title: Text(
+                      e
+                          .split(':')
+                          .length > 1 ? e.split(':')[1] : e),
+                  subtitle: Text(
+                      e
+                          .split(':')
+                          .length > 1 ? e.split(':')[0] : ''),
+                  trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        //
+                      }),
+                ))
+                .toList() ??
                 []
           ],
         ),
