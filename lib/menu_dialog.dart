@@ -124,14 +124,10 @@ class MenuDialogState extends State<MenuDialog> {
               if (supCategory.isNotEmpty && !noGroup) {
                 SubMenu sup =
                     item.sub.firstWhere((e) => e.category == supCategory);
-                sup.dishes.add(controller.value.text);
                 final index =
                     item.sub.indexWhere((e) => e.category == sup.category);
-                item.sub[index] = sup;
-                final map = {
-                  'sub': item.sub.map((e) => e.toMap()),
-                  ...item.toMap()
-                };
+                item.sub[index].dishes.add(controller.value.text);
+                final map = item.toMap();
                 await ref.update(map);
               } else {
                 item.dishes.add(controller.value.text);

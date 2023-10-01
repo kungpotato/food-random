@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:foodrandom/menu_dialog.dart';
 import 'package:foodrandom/models/menu_model.dart';
-import 'package:foodrandom/utils/calculate.dart';
 
 class Manage extends StatefulWidget {
   const Manage({super.key});
@@ -15,9 +15,8 @@ class Manage extends StatefulWidget {
 
 class _ManageState extends State<Manage> {
   StreamSubscription? disposeMenu;
-  Map<String, List<String>> menus = {};
   String groupName = '';
-  List<Menu> allMenu = [];
+  List<Menu> menuList = [];
 
   @override
   void initState() {
@@ -25,13 +24,9 @@ class _ManageState extends State<Manage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       disposeMenu = getMenusFromDb().listen((data) {
         setState(() {
-          allMenu = data;
-        });
-        final plan = MenuPlanner(menus: data);
-        setState(() {
-          menus = plan.allMenu;
           if (groupName.isEmpty) {
-            groupName = menus.entries.first.key;
+            groupName = data.first.category;
+            menuList = data;
           }
         });
       }, onError: (err, st) {
@@ -49,7 +44,7 @@ class _ManageState extends State<Manage> {
 
   Stream<List<Menu>> getMenusFromDb([bool isSnap = true]) {
     final CollectionReference menusCollection =
-    FirebaseFirestore.instance.collection('menus');
+        FirebaseFirestore.instance.collection('menus');
     if (isSnap) {
       return menusCollection.snapshots().map((snapshot) {
         return snapshot.docs.map((doc) {
@@ -74,7 +69,6 @@ class _ManageState extends State<Manage> {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
-
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: DropdownButton<String>(
@@ -85,8 +79,8 @@ class _ManageState extends State<Manage> {
                     groupName = newValue!;
                   });
                 },
-                items: menus.entries
-                    .map((e) => e.key)
+                items: menuList
+                    .map((e) => e.category)
                     .map<DropdownMenuItem<String>>((value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -104,51 +98,78 @@ class _ManageState extends State<Manage> {
                     context: context,
                     builder: (BuildContext context) {
                       return MenuDialog(
-                          allMenu: allMenu,
+                          allMenu: menuList,
                           category: groupName,
                           type:
-                          groupName.contains('เย็น') ? 'dinner' : 'lunch');
+                              groupName.contains('เย็น') ? 'dinner' : 'lunch');
                     },
                   );
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('เพิ่มอาหาร')),
-            ...menus[groupName]
-                ?.map((e) =>
-                ListTile(
-                  title: Text(
-                      e
-                          .split(':')
-                          .length > 1 ? e.split(':')[1] : e),
-                  subtitle: Text(
-                      e
-                          .split(':')
-                          .length > 1 ? e.split(':')[0] : ''),
-                  trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () async {
-                        Menu item = allMenu
-                            .firstWhere((e) => e.category == groupName);
-                        item.dishes.removeWhere((v) => e.contains(v));
-                        for (int i = 0; i < item.sub.length; i++) {
-                          item.sub[i].dishes
-                              .removeWhere((val) => e.contains(val));
-                        }
-                        final ref = FirebaseFirestore.instance
-                            .collection('menus')
-                            .doc(item.id);
-                        await ref.update(item.toMap());
-                        if (mounted) {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                            content: Text('สำเร็จ'),
-                            backgroundColor: Colors.green,
-                            duration: Duration(seconds: 3),
-                          ));
-                        }
-                      }),
-                ))
-                .toList() ??
+            ...menuList
+                    .firstWhereOrNull((e) => e.category == groupName)
+                    ?.dishes
+                    .map((e) => ListTile(
+                          title: Text(e),
+                          trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                Menu item = menuList
+                                    .firstWhere((e) => e.category == groupName);
+                                item.dishes.removeWhere((v) => e.contains(v));
+                                for (int i = 0; i < item.sub.length; i++) {
+                                  item.sub[i].dishes
+                                      .removeWhere((val) => e.contains(val));
+                                }
+                                final ref = FirebaseFirestore.instance
+                                    .collection('menus')
+                                    .doc(item.id);
+                                await ref.update(item.toMap());
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    content: Text('สำเร็จ'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 3),
+                                  ));
+                                }
+                              }),
+                        ))
+                    .toList() ??
+                [],
+            ...menuList
+                    .firstWhereOrNull((e) => e.category == groupName)
+                    ?.sub
+                    .map((e) => e.dishes)
+                    .expand((i) => i)
+                    .map((e) => ListTile(
+                          title: Text(e),
+                          trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                Menu item = menuList
+                                    .firstWhere((e) => e.category == groupName);
+                                item.dishes.removeWhere((v) => e.contains(v));
+                                for (int i = 0; i < item.sub.length; i++) {
+                                  item.sub[i].dishes
+                                      .removeWhere((val) => e.contains(val));
+                                }
+                                final ref = FirebaseFirestore.instance
+                                    .collection('menus')
+                                    .doc(item.id);
+                                await ref.update(item.toMap());
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    content: Text('สำเร็จ'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 3),
+                                  ));
+                                }
+                              }),
+                        ))
+                    .toList() ??
                 []
           ],
         ),
