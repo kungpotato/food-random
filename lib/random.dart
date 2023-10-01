@@ -17,6 +17,7 @@ class RandomFood extends StatefulWidget {
 
 class _RandomFoodState extends State<RandomFood> {
   StreamSubscription? disposeMenu;
+  StreamSubscription? disposeDate;
   static const int _rowCount = 8;
   static const int _columnCount = 3;
   static const Map<int, String> _dayNames = {
@@ -53,13 +54,56 @@ class _RandomFoodState extends State<RandomFood> {
     return dateTime.subtract(Duration(days: daysUntilMonday));
   }
 
+  Future<void> saveDate(DateTime date) async {
+    try {
+      final datesCollection =
+          FirebaseFirestore.instance.collection('date').doc('start_date');
+      await datesCollection.set({'date': Timestamp.fromDate(date)});
+      print("Dates saved successfully");
+    } catch (error) {
+      print("Failed to save dates: $error");
+      throw error;
+    }
+  }
+
+  Stream<DateTime?> dateStream() {
+    final datesCollection =
+        FirebaseFirestore.instance.collection('date').doc('start_date');
+
+    return datesCollection.snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        Map<String, dynamic>? data = snapshot.data();
+        if (data != null && data.containsKey('date')) {
+          Timestamp? timestamp = data['date'] as Timestamp?;
+          if (timestamp != null) {
+            return timestamp.toDate(); // Convert the Timestamp to DateTime
+          }
+        }
+      }
+      print("No date found in the document");
+      return null;
+    }).handleError((error) {
+      print("Failed to fetch date: $error");
+      throw error;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    // saveMenusToDb();
     setState(() {
       selectedDate = _findMonday(DateTime.now());
     });
-    // saveMenusToDb();
+    disposeDate = dateStream().listen((timestamp) {
+      if (timestamp != null) {
+        setState(() {
+          selectedDate = timestamp;
+        });
+      } else {
+        saveDate(_findMonday(DateTime.now()));
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       disposeMenu = getMealFromDb().listen((data) {
         setState(() {
@@ -153,9 +197,7 @@ class _RandomFoodState extends State<RandomFood> {
       },
     );
     if (pickedDate != null && pickedDate != selectedDate) {
-      setState(() {
-        selectedDate = pickedDate;
-      });
+      saveDate(pickedDate);
     }
   }
 
