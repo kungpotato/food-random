@@ -143,7 +143,6 @@ class MenuDialogState extends State<MenuDialog> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text('สำเร็จ'),
                   backgroundColor: Colors.green,
-                  // Use green color to indicate success
                   duration: Duration(seconds: 3),
                 ));
               }

@@ -49,7 +49,7 @@ class _ManageState extends State<Manage> {
 
   Stream<List<Menu>> getMenusFromDb([bool isSnap = true]) {
     final CollectionReference menusCollection =
-    FirebaseFirestore.instance.collection('menus');
+        FirebaseFirestore.instance.collection('menus');
     if (isSnap) {
       return menusCollection.snapshots().map((snapshot) {
         return snapshot.docs.map((doc) {
@@ -83,7 +83,7 @@ class _ManageState extends State<Manage> {
                           allMenu: allMenu,
                           category: groupName,
                           type:
-                          groupName.contains('เย็น') ? 'dinner' : 'lunch');
+                              groupName.contains('เย็น') ? 'dinner' : 'lunch');
                     },
                   );
                 },
@@ -113,23 +113,36 @@ class _ManageState extends State<Manage> {
               ),
             ),
             ...menus[groupName]
-                ?.map((e) =>
-                ListTile(
-                  title: Text(
-                      e
-                          .split(':')
-                          .length > 1 ? e.split(':')[1] : e),
-                  subtitle: Text(
-                      e
-                          .split(':')
-                          .length > 1 ? e.split(':')[0] : ''),
-                  trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        //
-                      }),
-                ))
-                .toList() ??
+                    ?.map((e) => ListTile(
+                          title: Text(
+                              e.split(':').length > 1 ? e.split(':')[1] : e),
+                          subtitle: Text(
+                              e.split(':').length > 1 ? e.split(':')[0] : ''),
+                          trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                Menu item = allMenu
+                                    .firstWhere((e) => e.category == groupName);
+                                item.dishes.removeWhere((v) => e.contains(v));
+                                for (int i = 0; i < item.sub.length; i++) {
+                                  item.sub[i].dishes
+                                      .removeWhere((val) => e.contains(val));
+                                }
+                                final ref = FirebaseFirestore.instance
+                                    .collection('menus')
+                                    .doc(item.id);
+                                await ref.update(item.toMap());
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    content: Text('สำเร็จ'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 3),
+                                  ));
+                                }
+                              }),
+                        ))
+                    .toList() ??
                 []
           ],
         ),
