@@ -18,6 +18,7 @@ class RandomFood extends StatefulWidget {
 class _RandomFoodState extends State<RandomFood> {
   StreamSubscription? disposeMenu;
   StreamSubscription? disposeDate;
+  StreamSubscription? disposeMeal;
   static const int _rowCount = 8;
   static const int _columnCount = 3;
   static const Map<int, String> _dayNames = {
@@ -42,6 +43,7 @@ class _RandomFoodState extends State<RandomFood> {
 
   List<String> lunch = [];
   List<String> dinner = [];
+  List<Menu> menuList = [];
 
   Future<List<Menu>> loadMenu() async {
     String jsonString = await rootBundle.loadString('assets/mocks/menu.json');
@@ -105,10 +107,18 @@ class _RandomFoodState extends State<RandomFood> {
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      disposeMenu = getMealFromDb().listen((data) {
+      disposeMeal = getMealFromDb().listen((data) {
         setState(() {
           lunch = data.first['lunch'] ?? [];
           dinner = data.first['dinner'] ?? [];
+        });
+      }, onError: (err, st) {
+        print(err);
+        print(st);
+      });
+      disposeMenu = getMenusFromDb().listen((data) {
+        setState(() {
+          menuList = data;
         });
       }, onError: (err, st) {
         print(err);
@@ -121,17 +131,19 @@ class _RandomFoodState extends State<RandomFood> {
   void dispose() {
     super.dispose();
     disposeMenu?.cancel();
+    disposeMeal?.cancel();
+    disposeDate?.cancel();
   }
 
-  Widget _buildMealCard(String meal, DateTime date) {
+  Widget _buildMealCard(String meal, DateTime date, [bool lunch = true]) {
     final item = meal.split('=>');
     final data = item[1].split(',');
     return InkWell(
       onTap: () {
         if (data.length > 1) {
-          _showTextDialog(data, item[0], date);
+          _showTextDialog(data, item[0], date, lunch);
         } else {
-          _showTextDialog([item[1]], item[0], date);
+          _showTextDialog([item[1]], item[0], date, lunch);
         }
       },
       child: Card(
@@ -331,7 +343,7 @@ class _RandomFoodState extends State<RandomFood> {
                     index % 3 == 2 &&
                     dinner.isNotEmpty) {
                   final date = _indexDinnerToDay(index);
-                  return _buildMealCard(dinner[(index - 5) ~/ 3], date);
+                  return _buildMealCard(dinner[(index - 5) ~/ 3], date, false);
                 }
                 return Card(child: Center(child: Text('Item $index')));
               },
@@ -384,7 +396,135 @@ class _RandomFoodState extends State<RandomFood> {
     }
   }
 
-  void _showTextDialog(List<String> list, String title, DateTime date) {
+  void _showEditDialog(String title, bool isLunch) {
+    final formKey = GlobalKey<FormState>();
+    final controller = TextEditingController();
+    String groupName = '';
+    List<String> value = [];
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return WillPopScope(
+            onWillPop: () async => false,
+            child: AlertDialog(
+              title: const Text('แก้ไขเมนู'),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DropdownButton<String>(
+                        value: groupName.isNotEmpty
+                            ? groupName
+                            : menuList.map((e) => e.category).first,
+                        isExpanded: true,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            groupName = newValue!;
+                          });
+                        },
+                        items: menuList
+                            .map((e) => e.category)
+                            .map<DropdownMenuItem<String>>((value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Text(value),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            decoration:
+                                const InputDecoration(labelText: 'อาหาร'),
+                            controller: controller,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'ใส่ชื่ออาหาร';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              setState(() {
+                                if (!value.contains(controller.value.text)) {
+                                  value.add(controller.value.text);
+                                }
+                              });
+                              controller.clear();
+                            },
+                            icon: const Icon(Icons.add_circle))
+                      ],
+                    ),
+                    ...value
+                        .asMap()
+                        .entries
+                        .map((e) => ListTile(
+                              key: UniqueKey(),
+                              leading: Text((e.key + 1).toString()),
+                              title: Text(e.value),
+                            ))
+                        .toList()
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () async {
+                    if (value.isEmpty) {
+                      return;
+                    }
+                    final menusCollection = FirebaseFirestore.instance
+                        .collection('meal')
+                        .doc('1234');
+                    if (isLunch) {
+                      List<String> temp = lunch;
+                      final index = temp.indexWhere((e) => e.contains(title));
+                      temp[index] =
+                          '${groupName.isNotEmpty ? groupName : menuList.map((e) => e.category).first}=>${value.join(',')}';
+                      await menusCollection
+                          .set({'lunch': temp, 'dinner': dinner});
+                    } else {
+                      List<String> temp = dinner;
+                      final index = temp.indexWhere((e) => e.contains(title));
+                      temp[index] =
+                          '${groupName.isNotEmpty ? groupName : menuList.map((e) => e.category).first}=>${value.join(',')}';
+                      await menusCollection
+                          .set({'dinner': temp, 'lunch': lunch});
+                    }
+                    if (mounted) {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('ตกลง'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('ปิด'),
+                ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  void _showTextDialog(
+      List<String> list, String title, DateTime date, bool lunch) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -414,13 +554,13 @@ class _RandomFoodState extends State<RandomFood> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                _showEditDialog(title, lunch);
               },
               child: const Text('แก้ไข'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text('ปิด'),
             ),
