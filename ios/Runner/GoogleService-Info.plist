@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyCJ7hqbvk9H9PLjsZWcBGjP94KRCk4ovr8</string>
+	<string>AIzaSyB-ozldof-piOzG2nPlf8UTDJ2MxkMKPas</string>
 	<key>GCM_SENDER_ID</key>
-	<string>648211858999</string>
+	<string>159831241611</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.example.foodrandom</string>
 	<key>PROJECT_ID</key>
-	<string>random-food-82642</string>
+	<string>food-random-9519f</string>
 	<key>STORAGE_BUCKET</key>
-	<string>random-food-82642.appspot.com</string>
+	<string>food-random-9519f.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:648211858999:ios:fd61e3aeb2e72a5945e1b2</string>
+	<string>1:159831241611:ios:eb18e41f78d4ecd731758e</string>
 </dict>
 </plist>

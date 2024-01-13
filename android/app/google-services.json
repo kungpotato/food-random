@@ -7,45 +7,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:159831241611:android:4b83221b05a4f6f531758e",
-        "android_client_info": {
-          "package_name": "com.example.foodrandom"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDraMxouhJIXy5lHGwselKBsj_yy8DX934"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:159831241611:android:704e92cf9d2a70f231758e",
-        "android_client_info": {
-          "package_name": "com.foodrandom.foodrandom2"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDraMxouhJIXy5lHGwselKBsj_yy8DX934"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:159831241611:android:28a8d61475faa0f031758e",
+        "mobilesdk_app_id": "1:159831241611:android:9eaf8dff5776f59631758e",
         "android_client_info": {
           "package_name": "com.pota.foodrandom"
         }
