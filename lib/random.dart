@@ -9,6 +9,8 @@ import 'package:foodrandom/models/menu_model.dart';
 import 'package:foodrandom/utils/calculate.dart';
 import 'package:intl/intl.dart';
 
+enum DropType { lunch, dinner }
+
 class RandomFood extends StatefulWidget {
   const RandomFood({super.key});
 
@@ -47,6 +49,7 @@ class _RandomFoodState extends State<RandomFood> {
   List<Menu> menuList = [];
 
   int? currentIndex;
+  DropType? dropType;
 
   Future<List<Menu>> loadMenu() async {
     String jsonString = await rootBundle.loadString('assets/mocks/menu.json');
@@ -139,24 +142,27 @@ class _RandomFoodState extends State<RandomFood> {
   }
 
   Widget _buildMealCard(String meal, DateTime date, int index,
-      [bool lunch = true]) {
+      [bool isLunch = true]) {
     final data = meal.split(',');
     final item = Card(
-        color: currentIndex == index ? Colors.yellow.shade100 : null,
+        color: (currentIndex == index && dropType == DropType.lunch)
+            ? Colors.yellow.shade100
+            : null,
         child: Center(
             child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: Text(data.length > 1 ? 'กับข้าวพี่เล็ก' : meal))));
 
-    return DragTarget<List<String>>(
-      onMove: (details) {
+    return DragTarget<DropItem>(
+      onMove: (_) {
         setState(() {
           currentIndex = index;
+          dropType = isLunch ? DropType.lunch : DropType.dinner;
         });
       },
       builder: (context, candidateData, rejectedData) {
-        return LongPressDraggable<List<String>>(
-          data: data,
+        return LongPressDraggable<DropItem>(
+          data: DropItem(index: index, data: meal),
           dragAnchorStrategy: pointerDragAnchorStrategy,
           feedback: Container(
               decoration: BoxDecoration(color: Colors.blue.shade100),
@@ -166,21 +172,42 @@ class _RandomFoodState extends State<RandomFood> {
           child: InkWell(
             onTap: () {
               if (data.isNotEmpty) {
-                _showTextDialog(data, date, lunch);
+                _showTextDialog(data, date, isLunch);
               } else {
-                _showTextDialog([meal], date, lunch);
+                _showTextDialog([meal], date, isLunch);
               }
             },
             child: item,
           ),
         );
       },
-      onAccept: (data) {
+      onAccept: (data) async {
+        final menusCollection =
+            FirebaseFirestore.instance.collection('meal').doc('1234');
+        if (dropType == DropType.lunch) {
+          List<String> temp = switchDataInList(lunch, data.data, meal);
+          await menusCollection.set({'lunch': temp, 'dinner': dinner});
+        }
         setState(() {
           currentIndex = null;
+          dropType = null;
         });
       },
     );
+  }
+
+  List<String> switchDataInList(
+      List<String> list, String value1, String value2) {
+    int index1 = list.indexOf(value1);
+    int index2 = list.indexOf(value2);
+
+    if (index1 != -1 && index2 != -1) {
+      String temp = list[index1];
+      list[index1] = list[index2];
+      list[index2] = temp;
+    }
+
+    return list;
   }
 
   Widget _buildLabel(String text, Color color) {
@@ -598,4 +625,11 @@ class _RandomFoodState extends State<RandomFood> {
 
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
+}
+
+class DropItem {
+  int index;
+  String data;
+
+  DropItem({required this.index, required this.data});
 }
