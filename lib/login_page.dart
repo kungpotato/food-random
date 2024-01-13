@@ -29,21 +29,23 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Image.asset(
-                'assets/images/icon.png',
-                height: 150,
-              ),
-              // Replace with your logo
-              const SizedBox(height: 50),
-              _usernameField(),
-              const SizedBox(height: 20),
-              _passwordField(),
-              const SizedBox(height: 20),
-              _loginButton(context),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Image.asset(
+                  'assets/images/icon.png',
+                  height: 150,
+                ),
+                // Replace with your logo
+                const SizedBox(height: 50),
+                _usernameField(),
+                const SizedBox(height: 20),
+                _passwordField(),
+                const SizedBox(height: 20),
+                _loginButton(context),
+              ],
+            ),
           ),
         ),
       ),
