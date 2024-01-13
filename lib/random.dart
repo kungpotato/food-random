@@ -311,6 +311,7 @@ class _RandomFoodState extends State<RandomFood> {
                       child: Card(
                         color: Colors.blueGrey.shade100,
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               DateFormat('dd-MMM-yyyy', 'th')

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:foodrandom/login_page.dart';
 import 'package:foodrandom/manage.dart';
 import 'package:foodrandom/random.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -78,8 +79,13 @@ class MyHomePageState extends State<MyHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       _auth.authStateChanges().listen((user) async {
         if (user == null) {
-          _auth.signInWithEmailAndPassword(
-              email: 'admin@mail.com', password: '12345678');
+          // _auth.signInWithEmailAndPassword(
+          //     email: 'admin@mail.com', password: '12345678');
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LoginScreen(),
+              ));
         } else {
           setState(() {
             isLoad = false;
@@ -99,6 +105,13 @@ class MyHomePageState extends State<MyHomePage> {
         title: Text(
             _selectedIndex == 0 ? 'เมนูประจำอาทิตย์' : 'จัดการรายการอาหาร'),
         elevation: 0,
+        actions: [
+          IconButton(
+              onPressed: () {
+                _auth.signOut();
+              },
+              icon: const Icon(Icons.logout))
+        ],
       ),
       body: _pages().elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
