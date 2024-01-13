@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:foodrandom/date_extension.dart';
 import 'package:foodrandom/models/menu_model.dart';
 import 'package:foodrandom/utils/calculate.dart';
 import 'package:intl/intl.dart';
@@ -401,12 +400,11 @@ class _RandomFoodState extends State<RandomFood> {
     }
   }
 
-  void _showEditDialog(String title, bool isLunch) {
+  Future<void> _showEditDialog(String title, bool isLunch) async {
     final formKey = GlobalKey<FormState>();
-    final controller = TextEditingController();
-    String groupName = '';
-    List<String> value = [];
-    showDialog(
+    final controller = TextEditingController(text: title);
+
+    return showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (context, setState) {
@@ -419,31 +417,6 @@ class _RandomFoodState extends State<RandomFood> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: DropdownButton<String>(
-                        value: groupName.isNotEmpty
-                            ? groupName
-                            : menuList.map((e) => e.category).first,
-                        isExpanded: true,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            groupName = newValue!;
-                          });
-                        },
-                        items: menuList
-                            .map((e) => e.category)
-                            .map<DropdownMenuItem<String>>((value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Text(value),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
                     Row(
                       children: [
                         Expanded(
@@ -459,55 +432,32 @@ class _RandomFoodState extends State<RandomFood> {
                             },
                           ),
                         ),
-                        IconButton(
-                            onPressed: () {
-                              setState(() {
-                                if (!value.contains(controller.value.text)) {
-                                  value.add(controller.value.text);
-                                }
-                              });
-                              controller.clear();
-                            },
-                            icon: const Icon(Icons.add_circle))
                       ],
                     ),
-                    ...value
-                        .asMap()
-                        .entries
-                        .map((e) => ListTile(
-                              key: UniqueKey(),
-                              leading: Text((e.key + 1).toString()),
-                              title: Text(e.value),
-                            ))
-                        .toList()
                   ],
                 ),
               ),
               actions: <Widget>[
                 TextButton(
                   onPressed: () async {
-                    if (value.isEmpty) {
-                      return;
-                    }
                     final menusCollection = FirebaseFirestore.instance
                         .collection('meal')
                         .doc('1234');
                     if (isLunch) {
                       List<String> temp = lunch;
                       final index = temp.indexWhere((e) => e.contains(title));
-                      temp[index] =
-                          '${groupName.isNotEmpty ? groupName : menuList.map((e) => e.category).first}=>${value.join(',')}';
+                      temp[index] = controller.value.text;
                       await menusCollection
                           .set({'lunch': temp, 'dinner': dinner});
                     } else {
                       List<String> temp = dinner;
                       final index = temp.indexWhere((e) => e.contains(title));
-                      temp[index] =
-                          '${groupName.isNotEmpty ? groupName : menuList.map((e) => e.category).first}=>${value.join(',')}';
+                      temp[index] = controller.value.text;
                       await menusCollection
                           .set({'dinner': temp, 'lunch': lunch});
                     }
                     if (mounted) {
+                      controller.clear();
                       Navigator.pop(context);
                       Navigator.pop(context);
                     }
@@ -516,6 +466,7 @@ class _RandomFoodState extends State<RandomFood> {
                 ),
                 TextButton(
                   onPressed: () {
+                    controller.clear();
                     Navigator.of(context).pop();
                   },
                   child: const Text('ปิด'),
@@ -528,32 +479,38 @@ class _RandomFoodState extends State<RandomFood> {
     );
   }
 
-  void _showTextDialog(
-      List<String> list, DateTime date, bool lunch) {
+  void _showTextDialog(List<String> list, DateTime date, bool lunch) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(DateFormat('EEEE, d MMMM y', 'th').format(date)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Divider(thickness: 2),
-              const SizedBox(height: 8),
-              ...list
-                  .asMap()
-                  .entries
-                  .map((e) => ListTile(
-                        leading: list.length > 1
-                            ? Text((e.key + 1).toString())
-                            : null,
-                        title: Text(
-                          e.value,
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                      ))
-                  .toList()
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Divider(thickness: 2),
+                const SizedBox(height: 8),
+                ...list
+                    .asMap()
+                    .entries
+                    .map((e) => ListTile(
+                          leading: list.length > 1
+                              ? Text((e.key + 1).toString())
+                              : null,
+                          title: Text(
+                            e.value,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                          trailing: IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                await _showEditDialog(e.value, lunch);
+                              }),
+                        ))
+                    .toList()
+              ],
+            ),
           ),
           actions: <Widget>[
             TextButton(

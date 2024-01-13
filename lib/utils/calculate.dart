@@ -27,29 +27,18 @@ class MenuPlanner {
   }
 
   List<String> planLunchMenus() {
-    List<String> lunch = menus
+    final lunch = menus
         .where((e) => e.type == 'lunch')
-        .map((e) => e.sub.isEmpty
-            ? pickUniqueRandom(e.dishes, e.timePerWeek, _pickedLunches)
-                .map((v) => '${e.category}=>$v')
-            : pickUniqueRandom([
-                ...e.dishes.map((v) => '${e.category}=>$v'),
-                ...e.sub.asMap().entries.map((v) {
-                  if (v.value.pick == 0) {
-                    return '${e.category}=>${v.value.category}';
-                  } else {
-                    final ll = menus
-                        .where((n) => n.timePerWeek == 3)
-                        .map((j) => j.sub.map((p) {
-                              return pickUniqueRandom(
-                                  p.dishes, p.pick, _pickedLunches);
-                            }).expand((i) => i))
-                        .expand((i) => i)
-                        .toList();
-                    return '${e.category}=>${ll.join(',')}';
-                  }
-                })
-              ], e.timePerWeek, _pickedLunches))
+        .map((e) {
+          final List<String> list = [
+            ...e.dishes,
+            ...e.sub.map((v) => v.pick == 0
+                ? v.category
+                : pickUniqueRandom(v.dishes, v.pick, _pickedLunches).join(','))
+          ];
+          final val = pickUniqueRandom(list, e.timePerWeek, {});
+          return val;
+        })
         .expand((i) => i)
         .toList()
       ..shuffle(_random);
@@ -60,12 +49,13 @@ class MenuPlanner {
   List<String> planDinnerMenus() {
     final dinner = menus
         .where((e) => e.type == 'dinner')
-        .map((e) => pickUniqueRandom([
-              ...e.dishes.map((v) => '${e.category}=>$v'),
-              ...e.sub.map((v) => v.pick == 0
-                  ? '${e.category}=>${v.category}'
-                  : '${e.category}=>${pickUniqueRandom(v.dishes, v.pick, _pickedLunches).join(',')}')
-            ], e.timePerWeek, _pickedLunches))
+        .map((e) {
+          final List<String> list = e.sub
+              .map((v) => pickUniqueRandom(v.dishes, v.pick, _pickedLunches))
+              .expand((i) => i)
+              .toList();
+          return pickUniqueRandom(list, e.timePerWeek, {});
+        })
         .expand((i) => i)
         .toList()
       ..shuffle(_random);
