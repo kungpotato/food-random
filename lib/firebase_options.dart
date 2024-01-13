@@ -50,19 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCa3lnR1Dp5RZbawsoRBeOSo5a9jOj4j90',
-    appId: '1:648211858999:android:fa3491f533514e2145e1b2',
-    messagingSenderId: '648211858999',
-    projectId: 'random-food-82642',
-    storageBucket: 'random-food-82642.appspot.com',
+    apiKey: 'AIzaSyDraMxouhJIXy5lHGwselKBsj_yy8DX934',
+    appId: '1:159831241611:android:28a8d61475faa0f031758e',
+    messagingSenderId: '159831241611',
+    projectId: 'food-random-9519f',
+    storageBucket: 'food-random-9519f.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCJ7hqbvk9H9PLjsZWcBGjP94KRCk4ovr8',
-    appId: '1:648211858999:ios:fd61e3aeb2e72a5945e1b2',
-    messagingSenderId: '648211858999',
-    projectId: 'random-food-82642',
-    storageBucket: 'random-food-82642.appspot.com',
+    apiKey: 'AIzaSyB-ozldof-piOzG2nPlf8UTDJ2MxkMKPas',
+    appId: '1:159831241611:ios:f17790aca386f97b31758e',
+    messagingSenderId: '159831241611',
+    projectId: 'food-random-9519f',
+    storageBucket: 'food-random-9519f.appspot.com',
     iosBundleId: 'com.example.foodrandom',
   );
 }

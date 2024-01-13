@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:foodrandom/date_extension.dart';
 import 'package:foodrandom/models/menu_model.dart';
 import 'package:foodrandom/utils/calculate.dart';
 import 'package:intl/intl.dart';
@@ -136,21 +137,20 @@ class _RandomFoodState extends State<RandomFood> {
   }
 
   Widget _buildMealCard(String meal, DateTime date, [bool lunch = true]) {
-    final item = meal.split('=>');
-    final data = item[1].split(',');
+    final data = meal.split(',');
     return InkWell(
       onTap: () {
-        if (data.length > 1) {
-          _showTextDialog(data, item[0], date, lunch);
+        if (data.isNotEmpty) {
+          _showTextDialog(data, date, lunch);
         } else {
-          _showTextDialog([item[1]], item[0], date, lunch);
+          _showTextDialog([meal], date, lunch);
         }
       },
       child: Card(
           child: Center(
               child: Padding(
                   padding: const EdgeInsets.all(4),
-                  child: Text(data.length > 1 ? 'กับข้าวพี่เล็ก' : item[1])))),
+                  child: Text(data.length > 1 ? 'กับข้าวพี่เล็ก' : meal)))),
     );
   }
 
@@ -199,12 +199,17 @@ class _RandomFoodState extends State<RandomFood> {
   }
 
   Future<void> _selectDate() async {
+    DateTime initialMonday = selectedDate;
+    while (initialMonday.weekday != DateTime.monday) {
+      initialMonday = initialMonday.add(const Duration(days: 1));
+    }
+
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: initialMonday,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
-      selectableDayPredicate: (DateTime date) {
+      selectableDayPredicate: (date) {
         return date.weekday == DateTime.monday;
       },
     );
@@ -524,16 +529,15 @@ class _RandomFoodState extends State<RandomFood> {
   }
 
   void _showTextDialog(
-      List<String> list, String title, DateTime date, bool lunch) {
+      List<String> list, DateTime date, bool lunch) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(title),
+          title: Text(DateFormat('EEEE, d MMMM y', 'th').format(date)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(DateFormat('EEEE, d MMMM y', 'th').format(date)),
               const Divider(thickness: 2),
               const SizedBox(height: 8),
               ...list
@@ -554,7 +558,7 @@ class _RandomFoodState extends State<RandomFood> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                _showEditDialog(title, lunch);
+                // _showEditDialog(title, lunch);
               },
               child: const Text('แก้ไข'),
             ),
