@@ -539,6 +539,7 @@ class _RandomFoodState extends State<RandomFood> {
                       temp[index] = val.join(',');
                       menusCollection.set({'lunch': temp, 'dinner': dinner});
                       Navigator.of(context).pop();
+                      showSuccessSnackBar();
                     }, onError: (err, st) {
                       print(err);
                       print(st);
@@ -548,6 +549,7 @@ class _RandomFoodState extends State<RandomFood> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                showSuccessSnackBar();
               },
               child: const Text('ปิด'),
             ),
@@ -555,5 +557,14 @@ class _RandomFoodState extends State<RandomFood> {
         );
       },
     );
+  }
+
+  void showSuccessSnackBar() {
+    const snackBar = SnackBar(
+      content: Text('สำเร็จ'),
+      backgroundColor: Colors.green,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
