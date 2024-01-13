@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,7 @@ class _RandomFoodState extends State<RandomFood> {
         if (data != null && data.containsKey('date')) {
           Timestamp? timestamp = data['date'] as Timestamp?;
           if (timestamp != null) {
-            return timestamp.toDate(); // Convert the Timestamp to DateTime
+            return timestamp.toDate();
           }
         }
       }
@@ -479,7 +480,7 @@ class _RandomFoodState extends State<RandomFood> {
     );
   }
 
-  void _showTextDialog(List<String> list, DateTime date, bool lunch) {
+  void _showTextDialog(List<String> list, DateTime date, bool isLunch) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -505,7 +506,7 @@ class _RandomFoodState extends State<RandomFood> {
                           trailing: IconButton(
                               icon: const Icon(Icons.edit),
                               onPressed: () async {
-                                await _showEditDialog(e.value, lunch);
+                                await _showEditDialog(e.value, isLunch);
                               }),
                         ))
                     .toList()
@@ -513,12 +514,37 @@ class _RandomFoodState extends State<RandomFood> {
             ),
           ),
           actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                // _showEditDialog(title, lunch);
-              },
-              child: const Text('แก้ไข'),
-            ),
+            if (list.length > 1)
+              ElevatedButton(
+                  onPressed: () {
+                    getMenusFromDb(false).listen((data) {
+                      final newList = [
+                        ...data
+                            .where((e) => e.id == '100' || e.id == '101')
+                            .map((e) => e.dishes),
+                        ...data
+                            .where((e) => e.id == '100' || e.id == '101')
+                            .map((e) => e.sub.map((v) => v.dishes))
+                            .expand((i) => i)
+                      ].expand((i) => i).toList()
+                        ..shuffle(
+                            Random(DateTime.now().microsecondsSinceEpoch));
+                      final val = newList.take(list.length);
+                      final menusCollection = FirebaseFirestore.instance
+                          .collection('meal')
+                          .doc('1234');
+                      List<String> temp = lunch;
+                      final index =
+                          temp.indexWhere((e) => e.contains(list.first));
+                      temp[index] = val.join(',');
+                      menusCollection.set({'lunch': temp, 'dinner': dinner});
+                      Navigator.of(context).pop();
+                    }, onError: (err, st) {
+                      print(err);
+                      print(st);
+                    });
+                  },
+                  child: const Text('สุ่มอาหารพี่เล็ก')),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
