@@ -46,6 +46,8 @@ class _RandomFoodState extends State<RandomFood> {
   List<String> dinner = [];
   List<Menu> menuList = [];
 
+  int? currentIndex;
+
   Future<List<Menu>> loadMenu() async {
     String jsonString = await rootBundle.loadString('assets/mocks/menu.json');
     final list = jsonDecode(jsonString) as List;
@@ -136,21 +138,48 @@ class _RandomFoodState extends State<RandomFood> {
     disposeDate?.cancel();
   }
 
-  Widget _buildMealCard(String meal, DateTime date, [bool lunch = true]) {
+  Widget _buildMealCard(String meal, DateTime date, int index,
+      [bool lunch = true]) {
     final data = meal.split(',');
-    return InkWell(
-      onTap: () {
-        if (data.isNotEmpty) {
-          _showTextDialog(data, date, lunch);
-        } else {
-          _showTextDialog([meal], date, lunch);
-        }
+    final item = Card(
+        color: currentIndex == index ? Colors.yellow.shade100 : null,
+        child: Center(
+            child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Text(data.length > 1 ? 'กับข้าวพี่เล็ก' : meal))));
+
+    return DragTarget<List<String>>(
+      onMove: (details) {
+        setState(() {
+          currentIndex = index;
+        });
       },
-      child: Card(
-          child: Center(
-              child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(data.length > 1 ? 'กับข้าวพี่เล็ก' : meal)))),
+      builder: (context, candidateData, rejectedData) {
+        return LongPressDraggable<List<String>>(
+          data: data,
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: Container(
+              decoration: BoxDecoration(color: Colors.blue.shade100),
+              width: 100,
+              height: 100,
+              child: item),
+          child: InkWell(
+            onTap: () {
+              if (data.isNotEmpty) {
+                _showTextDialog(data, date, lunch);
+              } else {
+                _showTextDialog([meal], date, lunch);
+              }
+            },
+            child: item,
+          ),
+        );
+      },
+      onAccept: (data) {
+        setState(() {
+          currentIndex = null;
+        });
+      },
     );
   }
 
@@ -234,6 +263,7 @@ class _RandomFoodState extends State<RandomFood> {
     final menusCollection =
         FirebaseFirestore.instance.collection('meal').doc('1234');
     await menusCollection.set({'lunch': lunchData, 'dinner': dinnerData});
+    showSuccessSnackBar();
   }
 
   Stream<List<Map<String, List<String>>>> getMealFromDb() {
@@ -342,14 +372,15 @@ class _RandomFoodState extends State<RandomFood> {
                     index % 3 == 1 &&
                     lunch.isNotEmpty) {
                   final date = _indexLunchToDay(index);
-                  return _buildMealCard(lunch[(index - 4) ~/ 3], date);
+                  return _buildMealCard(lunch[(index - 4) ~/ 3], date, index);
                 }
                 if (index >= 5 &&
                     index <= 23 &&
                     index % 3 == 2 &&
                     dinner.isNotEmpty) {
                   final date = _indexDinnerToDay(index);
-                  return _buildMealCard(dinner[(index - 5) ~/ 3], date, false);
+                  return _buildMealCard(
+                      dinner[(index - 5) ~/ 3], date, index, false);
                 }
                 return Card(child: Center(child: Text('Item $index')));
               },
@@ -550,7 +581,6 @@ class _RandomFoodState extends State<RandomFood> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                showSuccessSnackBar();
               },
               child: const Text('ปิด'),
             ),
