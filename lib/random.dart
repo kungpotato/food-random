@@ -142,10 +142,10 @@ class _RandomFoodState extends State<RandomFood> {
   }
 
   Widget _buildMealCard(String meal, DateTime date, int index,
-      [bool isLunch = true]) {
+      [DropType type = DropType.lunch]) {
     final data = meal.split(',');
     final item = Card(
-        color: (currentIndex == index && dropType == DropType.lunch)
+        color: (currentIndex == index && dropType == type)
             ? Colors.yellow.shade100
             : null,
         child: Center(
@@ -157,13 +157,17 @@ class _RandomFoodState extends State<RandomFood> {
       onMove: (_) {
         setState(() {
           currentIndex = index;
-          dropType = isLunch ? DropType.lunch : DropType.dinner;
         });
       },
       builder: (context, candidateData, rejectedData) {
         return LongPressDraggable<DropItem>(
           data: DropItem(index: index, data: meal),
           dragAnchorStrategy: pointerDragAnchorStrategy,
+          onDragStarted: () {
+            setState(() {
+              dropType = type;
+            });
+          },
           feedback: Container(
               decoration: BoxDecoration(color: Colors.blue.shade100),
               width: 100,
@@ -172,9 +176,9 @@ class _RandomFoodState extends State<RandomFood> {
           child: InkWell(
             onTap: () {
               if (data.isNotEmpty) {
-                _showTextDialog(data, date, isLunch);
+                _showTextDialog(data, date, type);
               } else {
-                _showTextDialog([meal], date, isLunch);
+                _showTextDialog([meal], date, type);
               }
             },
             child: item,
@@ -182,11 +186,17 @@ class _RandomFoodState extends State<RandomFood> {
         );
       },
       onAccept: (data) async {
+        if (dropType != type) {
+          return;
+        }
         final menusCollection =
             FirebaseFirestore.instance.collection('meal').doc('1234');
         if (dropType == DropType.lunch) {
           List<String> temp = switchDataInList(lunch, data.data, meal);
           await menusCollection.set({'lunch': temp, 'dinner': dinner});
+        } else if (dropType == DropType.dinner) {
+          List<String> temp = switchDataInList(dinner, data.data, meal);
+          await menusCollection.set({'lunch': lunch, 'dinner': temp});
         }
         setState(() {
           currentIndex = null;
@@ -407,7 +417,7 @@ class _RandomFoodState extends State<RandomFood> {
                     dinner.isNotEmpty) {
                   final date = _indexDinnerToDay(index);
                   return _buildMealCard(
-                      dinner[(index - 5) ~/ 3], date, index, false);
+                      dinner[(index - 5) ~/ 3], date, index, DropType.dinner);
                 }
                 return Card(child: Center(child: Text('Item $index')));
               },
@@ -460,7 +470,7 @@ class _RandomFoodState extends State<RandomFood> {
     }
   }
 
-  Future<void> _showEditDialog(String title, bool isLunch) async {
+  Future<void> _showEditDialog(String title, DropType type) async {
     final formKey = GlobalKey<FormState>();
     final controller = TextEditingController(text: title);
 
@@ -503,7 +513,7 @@ class _RandomFoodState extends State<RandomFood> {
                     final menusCollection = FirebaseFirestore.instance
                         .collection('meal')
                         .doc('1234');
-                    if (isLunch) {
+                    if (type == DropType.lunch) {
                       List<String> temp = lunch;
                       final index = temp.indexWhere((e) => e.contains(title));
                       temp[index] = controller.value.text;
@@ -539,7 +549,7 @@ class _RandomFoodState extends State<RandomFood> {
     );
   }
 
-  void _showTextDialog(List<String> list, DateTime date, bool isLunch) {
+  void _showTextDialog(List<String> list, DateTime date, DropType type) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -565,7 +575,7 @@ class _RandomFoodState extends State<RandomFood> {
                           trailing: IconButton(
                               icon: const Icon(Icons.edit),
                               onPressed: () async {
-                                await _showEditDialog(e.value, isLunch);
+                                await _showEditDialog(e.value, type);
                               }),
                         ))
                     .toList()
